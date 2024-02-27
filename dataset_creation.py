@@ -16,9 +16,10 @@ NORMAL_DIST_DOMAIN = [0, 1]
 GRID_START = 0
 GRID_END = 1
 MAX_DEGREE = 4
+NUM_POINTS = 40
 
-NUM_POINTS = 10
-
+NUM_FUNCTIONS = 100
+NUM_RANDOM_POINTS = 10
 
 def sample_points(function):
     x = np.linspace(GRID_START, GRID_END, NUM_POINTS)
@@ -42,20 +43,22 @@ def create_datapoints_same_fun():
     coeff = generate_coeff()
     function = np.poly1d(coeff)
     x, y = sample_points(function)
+    y = y.tolist()
     integral_coeff = np.polyint(coeff)
     integral_fun = np.poly1d(integral_coeff)
-    x_integral, y_integral = sample_points(integral_fun)
+
     datapoints = []
-    for i in range(NUM_POINTS):
-        datapoints.append([y, x_integral[i], y_integral[i]])
+    for i in range(NUM_RANDOM_POINTS):
+        random_point = np.random.uniform(GRID_START, GRID_END)
+        random_point_integral_value = integral_fun(random_point)
+        datapoints.append([y, random_point, random_point_integral_value])
+
     return datapoints
 
 
-def create_datapoints(total_datapoints):
-    assert total_datapoints % NUM_POINTS == 0, f"number of requested datapoints not a multiple of {NUM_POINTS} "
-    num_functions = int(np.ceil(total_datapoints / NUM_POINTS))
+def create_datapoints():
     datapoints = []
-    for i in range(num_functions):
+    for i in range(NUM_FUNCTIONS):
         datapoints.extend(create_datapoints_same_fun())
     return datapoints
 
@@ -81,15 +84,4 @@ def write_to_csv(name, path, data, split):
         writer = csv.writer(f)
         writer.writerows(data)
 
-if __name__ == "__main__":
-    # Create datasets
-    train_set = create_datapoints(NUM_TRAIN_SAMPLES)
-    val_set = create_datapoints(NUM_VAL_SAMPLES)
-    test_set = create_datapoints(NUM_TEST_SAMPLES)
-    datasets_path = "datasets"
-    name = "first dataset"
-
-    write_to_csv(name, datasets_path, train_set, "train")
-    write_to_csv(name, datasets_path, val_set, "val")
-    write_to_csv(name, datasets_path, test_set, "test")
 
