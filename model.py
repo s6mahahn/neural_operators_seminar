@@ -11,28 +11,50 @@ from dataset_creation import create_datapoints, NUM_POINTS
 
 torch.set_default_dtype(torch.float64)
 
-
 # seed_everything(42, workers=True)
+torch.manual_seed(42)
 
+# depth
+NUM_LAYERS = 3
+# width
+HIDDEN_SIZE = 10
+# learing rate
+LR = 0.001
 
 class IntegralModel(L.LightningModule):
 
-    def __init__(self):
+    def __init__(self, input_size = NUM_POINTS + 1, hidden_size = HIDDEN_SIZE, output_size = 1, num_layers = NUM_LAYERS):
         super().__init__()
 
-        self.layer1 = nn.Linear(NUM_POINTS + 1, 2560)
-        self.layer2 = nn.Linear(2560, 1)
-        self.activation = nn.ReLU()  # TODO: pls discuss this
-        self.loss = nn.MSELoss()  # TODO: discuss
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        self.output_size = output_size
+        self.num_layers = num_layers
 
-        # initialize the weights of linear layers
-        nn.init.xavier_uniform_(self.layer1.weight)
-        nn.init.xavier_uniform_(self.layer2.weight)
+        # Initialize layers
+        self.layers = nn.ModuleList()
+        self.layers.append(nn.Linear(input_size, hidden_size))
+        for _ in range(num_layers - 2):
+            self.layers.append(nn.Linear(hidden_size, hidden_size))
+        self.output_layer = nn.Linear(hidden_size, output_size)
+
+        self.activation = nn.ReLU()
+        self.loss = nn.MSELoss()
+
+        # Initialize weights
+        for layer in self.layers:
+            nn.init.xavier_uniform_(layer.weight)
+        nn.init.xavier_uniform_(self.output_layer.weight)
 
     def forward(self, x):
-        out = self.layer1(x)
-        out = self.activation(out)
-        out = self.layer2(out)
+        out = x
+        for layer in self.layers:
+            # linear layer
+            out = layer(out)
+            # activation layer
+            out = self.activation(out)
+
+        out = self.output_layer(out)
         return out
 
     def training_step(self, batch):
@@ -55,23 +77,14 @@ class IntegralModel(L.LightningModule):
     def test_step(self, batch):
         u, x, Fx = batch
         x = torch.cat((u, x.unsqueeze(0).T), dim=1)
-        out = self.forward(x).squeeze()
+        out = self.forward(x)
         loss = self.loss(out, Fx)
         self.log("test_loss", loss, prog_bar=True)
         return loss
 
     def configure_optimizers(self):
-        optimizer = optim.Adam(self.parameters(), lr=1e-3)
+        optimizer = optim.Adam(self.parameters(), lr=LR)
         return optimizer
-
-
-model = IntegralModel()
-
-def load_dataset(path: Path):
-    with open(path, "rb") as f:
-        data = pickle.load(f)
-    return data
-
 
 class MyDataset(Dataset):
     def __init__(self, datapoints):
@@ -92,19 +105,22 @@ class MyDataset(Dataset):
                 torch.tensor(self.x[index]),
                 torch.tensor(self.Gx[index]))
 
-if __name__ == "__main__":
-    train_set = MyDataset(create_datapoints())
-    val_set = MyDataset(create_datapoints())
-    test_set = MyDataset(create_datapoints())
+
+if __name__ == '__main__':
+
+    train_set = MyDataset(create_datapoints(1000))
+    val_set = MyDataset(create_datapoints(200))
+    test_set = MyDataset(create_datapoints(200))
 
     train_loader = DataLoader(train_set, batch_size=16, shuffle=True)
     val_loader = DataLoader(val_set, batch_size=8)
     test_loader = DataLoader(test_set, batch_size=1)
 
+    model = IntegralModel()
     logger = TensorBoardLogger("tb_logs", name="my_model")
-    trainer = L.Trainer(logger=logger, max_epochs=10000)
-    trainer.fit(model=model, train_dataloaders=train_loader, val_dataloaders=val_loader,
-                )
+    trainer = L.Trainer(logger=logger, max_epochs=200)
+    trainer.fit(model=model, train_dataloaders=train_loader, val_dataloaders=val_loader)
+
 
     # test model
     trainer.test(ckpt_path="best", dataloaders=test_loader)
