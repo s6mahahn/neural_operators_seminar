@@ -15,11 +15,11 @@ torch.set_default_dtype(torch.float64)
 torch.manual_seed(42)
 
 # depth
-NUM_LAYERS = 2
+NUM_LAYERS = 3
 # width
 HIDDEN_SIZE = 10
 # learing rate
-LR = 0.01
+LR = 0.001
 
 class IntegralModel(L.LightningModule):
 
@@ -47,11 +47,13 @@ class IntegralModel(L.LightningModule):
         nn.init.xavier_uniform_(self.output_layer.weight)
 
     def forward(self, x):
+        out = x
         for layer in self.layers:
             # linear layer
-            linear_output = layer(x)
-            # activation function
-            out = self.activation(linear_output)
+            out = layer(out)
+            # activation layer
+            out = self.activation(out)
+
         out = self.output_layer(out)
         return out
 
@@ -104,20 +106,21 @@ class MyDataset(Dataset):
                 torch.tensor(self.Gx[index]))
 
 
+if __name__ == '__main__':
 
-train_set = MyDataset(create_datapoints(1000))
-val_set = MyDataset(create_datapoints(200))
-test_set = MyDataset(create_datapoints(200))
+    train_set = MyDataset(create_datapoints(1000))
+    val_set = MyDataset(create_datapoints(200))
+    test_set = MyDataset(create_datapoints(200))
 
-train_loader = DataLoader(train_set, batch_size=16, shuffle=True)
-val_loader = DataLoader(val_set, batch_size=8)
-test_loader = DataLoader(test_set, batch_size=1)
+    train_loader = DataLoader(train_set, batch_size=16, shuffle=True)
+    val_loader = DataLoader(val_set, batch_size=8)
+    test_loader = DataLoader(test_set, batch_size=1)
 
-model = IntegralModel()
-logger = TensorBoardLogger("tb_logs", name="my_model")
-trainer = L.Trainer(logger=logger, max_epochs=10000)
-trainer.fit(model=model, train_dataloaders=train_loader, val_dataloaders=val_loader)
+    model = IntegralModel()
+    logger = TensorBoardLogger("tb_logs", name="my_model")
+    trainer = L.Trainer(logger=logger, max_epochs=200)
+    trainer.fit(model=model, train_dataloaders=train_loader, val_dataloaders=val_loader)
 
 
-# test model
-trainer.test(ckpt_path="best", dataloaders=test_loader)
+    # test model
+    trainer.test(ckpt_path="best", dataloaders=test_loader)

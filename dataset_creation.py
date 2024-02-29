@@ -4,7 +4,7 @@ from pathlib import Path
 
 import numpy as np
 import pickle
-import helper
+# import helper
 
 # Given by tasks some we can play around with
 np.random.seed(42)
