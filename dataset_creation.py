@@ -21,6 +21,7 @@ NUM_POINTS = 40
 NUM_FUNCTIONS = 100
 NUM_RANDOM_POINTS = 10
 
+
 def sample_points(function):
     x = np.linspace(GRID_START, GRID_END, NUM_POINTS)
     # sample instead
@@ -83,5 +84,3 @@ def write_to_csv(name, path, data, split):
     with open(file_path, 'w', newline='') as f:
         writer = csv.writer(f)
         writer.writerows(data)
-
-

@@ -30,7 +30,6 @@ class IntegralModel(L.LightningModule):
         nn.init.xavier_uniform_(self.layer2.weight)
 
     def forward(self, x):
-
         out = self.layer1(x)
         out = self.activation(out)
         out = self.layer2(out)
@@ -56,7 +55,7 @@ class IntegralModel(L.LightningModule):
     def test_step(self, batch):
         u, x, Fx = batch
         x = torch.cat((u, x.unsqueeze(0).T), dim=1)
-        out = self.forward(x)
+        out = self.forward(x).squeeze()
         loss = self.loss(out, Fx)
         self.log("test_loss", loss, prog_bar=True)
         return loss
@@ -72,11 +71,6 @@ def load_dataset(path: Path):
     with open(path, "rb") as f:
         data = pickle.load(f)
     return data
-
-
-# train_set = load_dataset(Path("datasets/first dataset_240227_1948_train.pickle"))
-# val_set = load_dataset(Path("datasets/first dataset_240227_1948_val.pickle"))
-# test_set = load_dataset(Path("datasets/first dataset_240227_1948_test.pickle"))
 
 
 class MyDataset(Dataset):
@@ -98,20 +92,19 @@ class MyDataset(Dataset):
                 torch.tensor(self.x[index]),
                 torch.tensor(self.Gx[index]))
 
+if __name__ == "__main__":
+    train_set = MyDataset(create_datapoints())
+    val_set = MyDataset(create_datapoints())
+    test_set = MyDataset(create_datapoints())
 
+    train_loader = DataLoader(train_set, batch_size=16, shuffle=True)
+    val_loader = DataLoader(val_set, batch_size=8)
+    test_loader = DataLoader(test_set, batch_size=1)
 
-train_set = MyDataset(create_datapoints())
-val_set = MyDataset(create_datapoints())
-test_set = MyDataset(create_datapoints())
+    logger = TensorBoardLogger("tb_logs", name="my_model")
+    trainer = L.Trainer(logger=logger, max_epochs=10000)
+    trainer.fit(model=model, train_dataloaders=train_loader, val_dataloaders=val_loader,
+                )
 
-train_loader = DataLoader(train_set, batch_size=16, shuffle=True)
-val_loader = DataLoader(val_set, batch_size=8)
-test_loader = DataLoader(test_set, batch_size=1)
-
-logger = TensorBoardLogger("tb_logs", name="my_model")
-trainer = L.Trainer(logger=logger, max_epochs=200)
-trainer.fit(model=model, train_dataloaders=train_loader, val_dataloaders=val_loader,
-            )
-
-# test model
-trainer.test(ckpt_path="best", dataloaders=test_loader)
+    # test model
+    trainer.test(ckpt_path="best", dataloaders=test_loader)
