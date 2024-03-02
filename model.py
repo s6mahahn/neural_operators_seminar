@@ -15,11 +15,11 @@ torch.set_default_dtype(torch.float64)
 torch.manual_seed(42)
 
 # depth
-NUM_LAYERS = 3
+NUM_LAYERS = 2
 # width
-HIDDEN_SIZE = 10
+HIDDEN_SIZE = 2560
 # learing rate
-LR = 0.001
+LR = 0.0001
 
 class IntegralModel(L.LightningModule):
 
@@ -118,7 +118,7 @@ if __name__ == '__main__':
 
     model = IntegralModel()
     logger = TensorBoardLogger("tb_logs", name="my_model")
-    trainer = L.Trainer(logger=logger, max_epochs=200)
+    trainer = L.Trainer(logger=logger, max_epochs=10000)
     trainer.fit(model=model, train_dataloaders=train_loader, val_dataloaders=val_loader)
 
 
