@@ -19,7 +19,7 @@ GRID_END = 1
 MAX_DEGREE = 4
 NUM_POINTS = 40
 
-NUM_RANDOM_POINTS = 10
+NUM_RANDOM_POINTS = 1
 
 def sample_points(function):
     x = np.linspace(GRID_START, GRID_END, NUM_POINTS)
@@ -50,15 +50,18 @@ def create_datapoints_same_fun():
     datapoints = []
     for i in range(NUM_RANDOM_POINTS):
         random_point = np.random.uniform(GRID_START, GRID_END)
-        random_point_integral_value = integral_fun(random_point)
-        datapoints.append([y, random_point, random_point_integral_value])
+        # Here should be F(a)-F(0)
+        integral_value_at_random_point = integral_fun(random_point)
+        integral_value_at_zero = integral_fun(0)
+        actual_antiderivative_at_random_point = integral_value_at_random_point - integral_value_at_zero
+        datapoints.append([y, random_point, actual_antiderivative_at_random_point])
 
     return datapoints
 
 
 def create_datapoints(total_datapoints):
-    assert total_datapoints % NUM_POINTS == 0, f"number of requested datapoints not a multiple of {NUM_POINTS} "
-    num_functions = int(np.ceil(total_datapoints / NUM_POINTS))
+    assert total_datapoints % NUM_RANDOM_POINTS == 0, f"number of requested datapoints not a multiple of {NUM_POINTS} "
+    num_functions = int(np.ceil(total_datapoints / NUM_RANDOM_POINTS))
     datapoints = []
     for i in range(num_functions):
         datapoints.extend(create_datapoints_same_fun())
