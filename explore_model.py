@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 import torch.cuda
-import dataset_creation
+
 import helper
 from model import IntegralModel
 
@@ -34,9 +34,22 @@ def anti_derivative_sigmoid(x):
 
 # load model
 
+def calculate_mse_for_test_fun():
+    # TODO: for a given test function calculate the Mean squared error between the true integral and the predicted operator
+    pass
+
+
+def compare_to_taylor():
+    # TODO: compare prediction to taylor approximation up to degree n
+    pass
+
+
 def test_other_fun(model, fun, antiderivative, fun_name, interval):
     fun = sample_points(fun, interval)
-    true_antiderivative = sample_points(antiderivative, interval)
+    true_antiderivative_x, true_antiderivative_y = sample_points(antiderivative, interval)
+    # Also substract F(0) for the true_antiderivative
+    true_antiderivative_y = [z - true_antiderivative_y[0] for z in true_antiderivative_y]
+    true_antiderivative = (true_antiderivative_x, true_antiderivative_y)
     x = fun[0]
     y = fun[1]
     pred_antiderivative_x = x
@@ -44,8 +57,10 @@ def test_other_fun(model, fun, antiderivative, fun_name, interval):
     for i in x:
         res = model(torch.tensor(np.append(y, i)).to(model.device))
         pred_antiderivative_y.append(res.item())
+
     pred_antiderivative = (pred_antiderivative_x, pred_antiderivative_y)
-    helper.plot_all(fun, true_antiderivative, pred_antiderivative, title=f"{fun_name}: function & antiderivative", save_file="gen_img/" + fun_name)
+    helper.plot_all(fun, true_antiderivative, pred_antiderivative, title=f"{fun_name}: function & antiderivative",
+                    save_file="gen_img/" + fun_name)
 
 
 if __name__ == '__main__':
@@ -57,8 +72,8 @@ if __name__ == '__main__':
 
     test_other_fun(trained_model, np.cos, np.sin, "cos", [0, 1])
 
-    random_fun_coeff = dataset_creation.generate_coeff()
+    random_fun_coeff = np.random.normal(size=5 + 1)
     random_fun = np.poly1d(random_fun_coeff)
     random_fun_integral = np.poly1d(np.polyint(random_fun))
 
-    test_other_fun(trained_model, random_fun, random_fun_integral, "cos", [0, 1])
+    test_other_fun(trained_model, np.exp, np.exp, "exp", [0, 1])
