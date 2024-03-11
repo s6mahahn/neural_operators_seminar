@@ -18,8 +18,8 @@ file for exploring and testing the trained model
 """
 
 
-def sample_points(function, grid):
-    x = np.linspace(grid[0], grid[1], 40)
+def sample_points(function, grid, num_points):
+    x = np.linspace(grid[0], grid[1], num_points)
     y = function(x)
     return x, y
 
@@ -34,9 +34,14 @@ def anti_derivative_sigmoid(x):
 
 # load model
 
-def calculate_mse_for_test_fun():
-    # TODO: for a given test function calculate the Mean squared error between the true integral and the predicted operator
-    pass
+def calculate_mse(pred_antiderivative, antiderivative, interval):
+    true_antiderivative_x, true_antiderivative_y = sample_points(antiderivative, interval, 40)
+    # Also substract F(0) for the true_antiderivative
+    true_antiderivative_y = [z - true_antiderivative_y[0] for z in true_antiderivative_y]
+    true_antiderivative = (true_antiderivative_x, true_antiderivative_y)
+    #mse = ((true_antiderivative_y - pred_antiderivative[1]) ** 2).mean()
+    mse = np.square(np.subtract(true_antiderivative_y, pred_antiderivative[1])).mean()
+    return mse
 
 
 def compare_to_taylor():
@@ -45,8 +50,8 @@ def compare_to_taylor():
 
 
 def test_other_fun(model, fun, antiderivative, fun_name, interval):
-    fun = sample_points(fun, interval)
-    true_antiderivative_x, true_antiderivative_y = sample_points(antiderivative, interval)
+    fun = sample_points(fun, interval, 40)
+    true_antiderivative_x, true_antiderivative_y = sample_points(antiderivative, interval, 1000)
     # Also substract F(0) for the true_antiderivative
     true_antiderivative_y = [z - true_antiderivative_y[0] for z in true_antiderivative_y]
     true_antiderivative = (true_antiderivative_x, true_antiderivative_y)
@@ -59,7 +64,9 @@ def test_other_fun(model, fun, antiderivative, fun_name, interval):
         pred_antiderivative_y.append(res.item())
 
     pred_antiderivative = (pred_antiderivative_x, pred_antiderivative_y)
-    helper.plot_all(fun, true_antiderivative, pred_antiderivative, title=f"{fun_name}: function & antiderivative",
+
+    mse = calculate_mse(pred_antiderivative, antiderivative, interval)
+    helper.plot_all(fun, true_antiderivative, pred_antiderivative, f"{fun_name}: function & antiderivative", mse,
                     save_file="gen_img/" + fun_name)
 
 
