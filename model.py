@@ -1,6 +1,3 @@
-import pickle
-from pathlib import Path
-
 import lightning as L
 import torch.utils.data
 from lightning.pytorch.loggers import TensorBoardLogger
@@ -20,12 +17,13 @@ torch.manual_seed(42)
 NUM_LAYERS = 2
 # width
 HIDDEN_SIZE = 2560
-# learing rate
-LR = 0.001
+# learning rate
+LR = 0.0001
+
 
 class IntegralModel(L.LightningModule):
 
-    def __init__(self, input_size = NUM_POINTS + 1, hidden_size = HIDDEN_SIZE, output_size = 1, num_layers = NUM_LAYERS):
+    def __init__(self, input_size=NUM_POINTS + 1, hidden_size=HIDDEN_SIZE, output_size=1, num_layers=NUM_LAYERS):
         super().__init__()
 
         self.input_size = input_size
@@ -88,6 +86,7 @@ class IntegralModel(L.LightningModule):
         optimizer = optim.Adam(self.parameters(), lr=LR)
         return optimizer
 
+
 class MyDataset(Dataset):
     def __init__(self, datapoints):
         self.u = []
@@ -109,7 +108,6 @@ class MyDataset(Dataset):
 
 
 if __name__ == '__main__':
-
     train_set = MyDataset(create_datapoints(1000))
     val_set = MyDataset(create_datapoints(200))
     test_set = MyDataset(create_datapoints(200))
@@ -124,9 +122,8 @@ if __name__ == '__main__':
 
     model = IntegralModel()
     logger = TensorBoardLogger("tb_logs", name="my_model")
-    trainer = L.Trainer(logger=logger, max_epochs=9999)
+    trainer = L.Trainer(logger=logger, max_epochs=10000)
     trainer.fit(model=model, train_dataloaders=train_loader, val_dataloaders=val_loader)
-
 
     # test model
     trainer.test(ckpt_path="best", dataloaders=test_loader)
