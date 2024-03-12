@@ -10,7 +10,7 @@ def plot_function_by_sampled_points(x, y, title, save_file=None):
     plt.grid(True)
     if save_file:
         plt.savefig(save_file)
-    plt.show()
+    # plt.show()
 
 
 def plot_comparison(x1, y1, x2, y2, title, plot_together=True, save_file=None):
@@ -23,24 +23,24 @@ def plot_comparison(x1, y1, x2, y2, title, plot_together=True, save_file=None):
         plt.legend()
         if save_file:
             plt.savefig(save_file)
-        plt.show()
+        # plt.show()
     else:
         plt.figure(1)
         plt.subplot(2, 1, 1)
         plt.plot(x1, y1)
-        plt.title('Expected')
+        plt.title('Antiderivative of function')
         plt.xlabel('X')
         plt.ylabel('Y')
 
         plt.subplot(2, 1, 2)
         plt.plot(x2, y2)
-        plt.title('Results of model')
+        plt.title('Model prediction of antiderivative')
         plt.xlabel('X')
         plt.ylabel('Y')
 
         plt.suptitle(title)
         if save_file:
             plt.savefig(save_file)
-        plt.show()
+        # plt.show()
 
-    plt.show()
+    # plt.show()

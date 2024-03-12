@@ -8,6 +8,8 @@ from torch import optim, nn
 from torch.utils.data import Dataset, DataLoader
 
 from dataset_creation import create_datapoints, NUM_POINTS
+# from explore_model import test_other_fun
+import numpy as np
 
 torch.set_default_dtype(torch.float64)
 
@@ -15,9 +17,9 @@ torch.set_default_dtype(torch.float64)
 torch.manual_seed(42)
 
 # depth
-NUM_LAYERS = 3
+NUM_LAYERS = 2
 # width
-HIDDEN_SIZE = 10
+HIDDEN_SIZE = 2560
 # learing rate
 LR = 0.001
 
@@ -115,10 +117,14 @@ if __name__ == '__main__':
     train_loader = DataLoader(train_set, batch_size=16, shuffle=True)
     val_loader = DataLoader(val_set, batch_size=8)
     test_loader = DataLoader(test_set, batch_size=1)
+    
+    # print(test_set[0])
+    
+    # exit(0)
 
     model = IntegralModel()
     logger = TensorBoardLogger("tb_logs", name="my_model")
-    trainer = L.Trainer(logger=logger, max_epochs=200)
+    trainer = L.Trainer(logger=logger, max_epochs=9999)
     trainer.fit(model=model, train_dataloaders=train_loader, val_dataloaders=val_loader)
 
 
