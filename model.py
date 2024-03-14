@@ -108,9 +108,9 @@ class MyDataset(Dataset):
 
 
 if __name__ == '__main__':
-    train_set = MyDataset(create_datapoints(1000))
-    val_set = MyDataset(create_datapoints(200))
-    test_set = MyDataset(create_datapoints(200))
+    train_set = MyDataset(create_datapoints(total_datapoints=1000,chebyshev_polymial=True))
+    val_set = MyDataset(create_datapoints(total_datapoints=200,chebyshev_polymial=True))
+    test_set = MyDataset(create_datapoints(total_datapoints=200,chebyshev_polymial=True))
 
     train_loader = DataLoader(train_set, batch_size=16, shuffle=True)
     val_loader = DataLoader(val_set, batch_size=8)
