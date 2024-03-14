@@ -7,6 +7,8 @@ from model import IntegralModel
 import matplotlib.pyplot as plt
 import dataset_creation
 
+MAX_DEGREE = 4
+
 
 """
 file for exploring and testing the trained model
@@ -66,8 +68,8 @@ def compare_to_taylor(fun, interval):
 
 
 
-def test_other_fun(model, fun, antiderivative, fun_name, interval):
-    fun = sample_points(fun, interval, 40)
+def test_other_fun(model, func, antiderivative, fun_name, interval):
+    fun = sample_points(func, interval, 40)
     true_antiderivative_x, true_antiderivative_y = sample_points(antiderivative, interval, 1000)
     # Also substract F(0) for the true_antiderivative
     true_antiderivative_y = [z - true_antiderivative_y[0] for z in true_antiderivative_y]
@@ -84,7 +86,7 @@ def test_other_fun(model, fun, antiderivative, fun_name, interval):
 
     mse = calculate_mse(pred_antiderivative, antiderivative, interval)
 
-    taylor_approximation = compare_to_taylor(fun, interval)
+    taylor_approximation = compare_to_taylor(func, interval)
 
     helper.plot_all(fun, true_antiderivative, pred_antiderivative,taylor_approximation,
                     f"{fun_name}: function & antiderivative & pred_antiderivative & Taylor Expansion ",
@@ -94,8 +96,6 @@ def test_other_fun(model, fun, antiderivative, fun_name, interval):
 
 if __name__ == '__main__':
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-
 
     trained_model = IntegralModel.load_from_checkpoint("trained_model/new_version/epoch=9999-step=630000.ckpt")
     trained_model.to(device)
