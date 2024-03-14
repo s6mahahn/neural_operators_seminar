@@ -5,6 +5,8 @@ import torch.cuda
 import helper
 from model import IntegralModel
 import matplotlib.pyplot as plt
+import dataset_creation
+
 
 """
 file for exploring and testing the trained model
@@ -45,9 +47,23 @@ def calculate_mse(pred_antiderivative, antiderivative, interval):
     return mse
 
 
-def compare_to_taylor():
+def compare_to_taylor(fun, interval):
     # TODO: compare prediction to taylor approximation up to degree n
-    pass
+
+    # Compute Taylor expansion coefficients
+    center_point = (interval[1] + interval[0]) / 2
+    taylor_coefficients = np.polyfit(np.arange(MAX_DEGREE + 1), fun(center_point + np.arange(MAX_DEGREE + 1)),
+                                     MAX_DEGREE)
+    taylor_expansion = np.poly1d(taylor_coefficients)
+
+    # Sample points for the Taylor expansion
+    taylor_x = np.linspace(interval[0], interval[1], 40) # same as fun[0]
+    taylor_y = taylor_expansion(taylor_x)
+
+    taylor_approximation = taylor_x, taylor_y
+
+    return taylor_approximation
+
 
 
 def test_other_fun(model, fun, antiderivative, fun_name, interval):
@@ -67,14 +83,21 @@ def test_other_fun(model, fun, antiderivative, fun_name, interval):
     pred_antiderivative = (pred_antiderivative_x, pred_antiderivative_y)
 
     mse = calculate_mse(pred_antiderivative, antiderivative, interval)
-    helper.plot_all(fun, true_antiderivative, pred_antiderivative, f"{fun_name}: function & antiderivative", mse,
-                    save_file="gen_img/" + fun_name)
+
+    taylor_approximation = compare_to_taylor(fun, interval)
+
+    helper.plot_all(fun, true_antiderivative, pred_antiderivative,taylor_approximation,
+                    f"{fun_name}: function & antiderivative & pred_antiderivative & Taylor Expansion ",
+                    mse,save_file="gen_img/" + fun_name)
+
 
 
 if __name__ == '__main__':
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    trained_model = IntegralModel.load_from_checkpoint("trained_model/epoch9999-step160000.ckpt")
+
+
+    trained_model = IntegralModel.load_from_checkpoint("trained_model/new_version/epoch=9999-step=630000.ckpt")
     trained_model.to(device)
     trained_model.eval()
 
