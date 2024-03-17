@@ -2,23 +2,19 @@ import lightning as L
 import torch.utils.data
 from lightning.pytorch.loggers import TensorBoardLogger
 from torch import optim, nn
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader
 
 from dataset_creation import create_datapoints, NUM_POINTS
-# from explore_model import test_other_fun
-import numpy as np
+from model import MyDataset
 
-from model import IntegralModel, MyDataset
 
 torch.set_default_dtype(torch.float64)
 
-# seed_everything(42, workers=True)
-# torch.manual_seed(42)
 
 TRUNK_DEPTH = 3
-TRUNK_WIDTH = 1000
+TRUNK_WIDTH = 40
 BRANCH_DEPTH = 2
-BRANCH_WIDTH = 1000
+BRANCH_WIDTH = 40
 
 
 # learning rate
@@ -40,7 +36,6 @@ class DeepONet(L.LightningModule):
         self.input_size = input_size
         self.output_size = output_size
         
-        
 
         # Initialize trunk
         self.trunk = nn.Sequential()
@@ -48,15 +43,15 @@ class DeepONet(L.LightningModule):
         for _ in range(trunk_depth - 1):
             self.trunk.append(nn.Linear(trunk_width, trunk_width))
             self.trunk.append(nn.ReLU())
-            
+
         # Initialize branch
         self.branch = nn.Sequential()
         self.branch.append(nn.Linear(input_size, branch_width))
         for _ in range(branch_depth - 1):
             self.branch.append(nn.Linear(branch_width, branch_width))
             self.branch.append(nn.ReLU())
-            
-        self.output_layer = nn.Linear(trunk_width + branch_width, output_size)
+
+        #self.output_layer = nn.Linear(trunk_width + branch_width, output_size)
         # self.output_layer = nn.Linear(trunk_width, output_size)
 
         self.loss = nn.MSELoss()
@@ -68,17 +63,18 @@ class DeepONet(L.LightningModule):
         for layer in self.branch:
             if isinstance(layer, nn.Linear):
                 nn.init.xavier_uniform_(layer.weight)
-        nn.init.xavier_uniform_(self.output_layer.weight)
+        #nn.init.xavier_uniform_(self.output_layer.weight)
 
     def forward(self, u, x):
         
         branch_out = self.branch(u)
         trunk_out = self.trunk(x)
 
-        out = torch.cat((trunk_out, branch_out), dim=1)
+        #out = torch.cat((trunk_out, branch_out), dim=1)
         # out = trunk_out + branch_out
-        
-        out = self.output_layer(out)
+
+        #out = self.output_layer(out)
+        out = torch.sum(branch_out * trunk_out)
         return out
     
     
@@ -89,7 +85,7 @@ class DeepONet(L.LightningModule):
         # x.shape torch.Size([8])
         # Fx.shape torch.Size([8])
     
-        out = self.forward(u, x.unsqueeze(1)).squeeze(1)
+        out = self.forward(u, x.unsqueeze(1)).squeeze()
 
         loss = self.loss(out, Fx)
         self.log("train_loss", loss, prog_bar=True)
@@ -98,7 +94,7 @@ class DeepONet(L.LightningModule):
     def validation_step(self, batch):
         u, x, Fx = batch
         
-        out = self.forward(u, x.unsqueeze(1)).squeeze(1)
+        out = self.forward(u, x.unsqueeze(1)).squeeze()
 
         loss = self.loss(out, Fx)
         self.log("val_loss", loss, prog_bar=True)
@@ -107,7 +103,7 @@ class DeepONet(L.LightningModule):
     def test_step(self, batch):
         u, x, Fx = batch
         
-        out = self.forward(u, x.unsqueeze(1)).squeeze(1)
+        out = self.forward(u, x.unsqueeze(1)).squeeze()
 
         loss = self.loss(out, Fx)
         self.log("test_loss", loss, prog_bar=True)

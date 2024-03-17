@@ -18,7 +18,7 @@ NUM_LAYERS = 2
 # width
 HIDDEN_SIZE = 2560
 # learning rate
-LR = 0.0001
+LR = 0.001
 
 
 class IntegralModel(L.LightningModule):
